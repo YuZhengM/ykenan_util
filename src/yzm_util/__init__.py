@@ -178,7 +178,7 @@ class FirefoxSelenium:
         # Set not to load
         options.page_load_strategy = 'normal'
         # Is it set to headless mode
-        if self.is_show:
+        if not self.is_show:
             # Set Firefox to headless interface free mode
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")
@@ -222,3 +222,24 @@ class FirefoxSelenium:
         except Exception as e:
             self.log.debug(f"Label does not exist: {e.args}")
             return False
+
+    def human_scroll(
+        self,
+        total_height=None, step_min=1000, step_max=1800,
+                     pause_min=0.3, pause_max=1.0, max_scrolls=400
+    ):
+        """模拟人的滚轮行为：小步下滚、随机停顿，直到页面底部"""
+        if total_height is None:
+            total_height = self.driver.execute_script("return document.body.scrollHeight")
+
+        scrolled = 0
+        count = 0
+        while scrolled < total_height and count < max_scrolls:
+            step = random.randint(step_min, step_max)  # 每步随机距离
+            self.driver.execute_script(f"window.scrollBy(0, {step});")
+            scrolled += step
+            count += 1
+            time.sleep(random.uniform(pause_min, pause_max))  # 随机停顿
+            # 动态页面（如懒加载）高度会变，更新总高度
+            total_height = self.driver.execute_script("return document.body.scrollHeight")
+
